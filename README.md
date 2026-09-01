@@ -98,6 +98,6 @@ Then open **http://localhost:5000** and try a transaction. For example:
 ## Why this matters for revenue recovery
 
 Every phantom failure that goes unflagged is a transaction that already
-succeeded but gets treated as lost- either through customer abandonment,
+succeeded but gets treated as lost, either through customer abandonment,
 duplicate charges, or manual support overhead. Catching these earlier
 recovers real revenue without needing a single additional sale.
