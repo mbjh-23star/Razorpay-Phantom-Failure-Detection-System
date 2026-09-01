@@ -62,13 +62,13 @@ payment systems.
 ```bash
 pip install -r requirements.txt
 
-# 1. Generate the synthetic dataset
+#1. Generate the synthetic dataset
 python3 src/data_generator.py
 
-# 2. Train the model
+#2. Train the model
 python3 src/train_model.py
 
-# 3. Run the demo app
+#3. Run the demo app
 python3 app.py
 ```
 
