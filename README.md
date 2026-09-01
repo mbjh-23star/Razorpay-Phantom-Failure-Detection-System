@@ -1,5 +1,5 @@
 # Phantom Failure Detector
-**AI Revenue Recovery — Razorpay Buildathon**
+**AI Revenue Recovery: Razorpay Buildathon**
 
 ## The problem
 
@@ -90,7 +90,7 @@ Then open **http://localhost:5000** and try a transaction. For example:
 
 - Plugged into an actual settlement/webhook feed, so "phantom" predictions
   get auto-verified within minutes instead of guessed.
-- A customer-facing message layer: "Don't retry — we're confirming your
+- A customer-facing message layer: "Don't retry- we're confirming your
   payment now," instead of leaving the customer to guess.
 - A merchant-side auto-confirm trigger, so orders aren't lost over a
   false "failed" status.
@@ -98,6 +98,6 @@ Then open **http://localhost:5000** and try a transaction. For example:
 ## Why this matters for revenue recovery
 
 Every phantom failure that goes unflagged is a transaction that already
-succeeded but gets treated as lost — either through customer abandonment,
+succeeded but gets treated as lost- either through customer abandonment,
 duplicate charges, or manual support overhead. Catching these earlier
 recovers real revenue without needing a single additional sale.
