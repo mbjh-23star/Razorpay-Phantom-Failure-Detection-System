@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Phantom Failure Detector</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #62a4b0;
+    --paper-line:#0f3d71  ;
+    --ink: #272727;
+    --ink-soft: #050505;
+    --ledger-green: #2F6B57;
+    --ledger-red: #9B3B33;
+    --gold: #383838;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Josefin Slab', serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 48px 24px 80px; }
+  header { margin-bottom: 40px; border-bottom: 2px solid var(--ink); padding-bottom: 24px; }
+  h1 {
+    font-family: 'Josefin Slab', serif;
+    font-weight: 600;
+    font-size: 2.5rem;
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+  }
+  .tagline { color: var(--ink-soft); font-size: 0.95rem; max-width: 60ch; }
+  .ledger-strip {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    font-size: 1.0rem;
+    color: var(--ink-soft);
+  }
+  .panel {
+    background: #bebebe;
+    border: 1px solid var(--paper-line);
+    border-radius: 2px;
+    padding: 28px;
+    margin-bottom: 28px;
+  }
+  .panel h2 {
+    font-family: 'Josefin Slab', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 0 0 20px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 24px;
+  }
+  label { display: block; font-size: 0.78rem; color: var(--ink-soft); margin-bottom: 6px; }
+  select, input {
+    width: 100%;
+    padding: 10px 12px;
+    font-family: 'Josefin Slab', serif;
+    font-size: 0.92rem;
+    background: #fff;
+    border: 1px solid var(--paper-line);
+    border-radius: 2px;
+    color: var(--ink);
+  }
+  button {
+    margin-top: 24px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 14px 22px;
+    font-family: 'Josefin Slab', serif;
+    font-size: 1.1rem;
+    font-weight: 500;
+    border-radius: 2px;
+    cursor: pointer;
+    width: 100%;
+  }
+  button:hover { background: var(--ledger-green); }
+
+  #result { display: none; }
+  .verdict {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px dashed var(--paper-line);
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+  }
+  .verdict-label { font-family: 'Josefin Slab', serif; font-size: 1.4rem; font-weight: 600; }
+  .verdict-label.phantom { color: var(--ledger-green); }
+  .verdict-label.real { color: var(--ledger-red); }
+  .confidence { font-size: 0.85rem; color: var(--ink-soft); }
+  .recommendation {
+    font-size: 1.5rem;
+    padding-top: 4px;
+  }
+  .recommendation .tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+  footer { color: var(--ink-soft); font-size: 0.78rem; margin-top: 40px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Phantom Failure Detector</h1>
+    <p class="tagline">When a payment shows as "failed" at checkout but actually clears the bank later, everyone loses. The customer thinks their order failed, the merchant misses out on a sale, and the money has already left the account.
+This model spots these phantom failures instantly, identifying which "failed" transactions actually went through long before the bank ledger updates.</p>
+    <div class="ledger-strip">
+      <span>GATEWAY STATUS: Failed</span>
+      <span>LEDGER STATUS: Pending Reconciliation</span>
+    </div>
+  </header>
+
+  <div class="panel">
+    <h2>Check a transaction</h2>
+    <div class="grid">
+      <div>
+        <label for="amount">Amount (₹)</label>
+        <input type="number" id="amount" value="1499" step="0.01">
+      </div>
+      <div>
+        <label for="response_time_ms">Gateway response time (ms)</label>
+        <input type="number" id="response_time_ms" value="24000">
+      </div>
+      <div>
+        <label for="bank">Bank</label>
+        <select id="bank">
+          {% for b in banks %}<option value="{{ b }}">{{ b }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="payment_method">Payment Method</label>
+        <select id="payment_method">
+          {% for m in payment_methods %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
+        </select>
+      </div>
+      <div style="grid-column: 1 / -1;">
+        <label for="decline_code">Decline / failure code</label>
+        <select id="decline_code">
+          {% for d in decline_codes %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+    <button onclick="checkTransaction()">Reconcile Transaction</button>
+  </div>
+
+  <div class="panel" id="result">
+    <h2>Reconciliation Result</h2>
+    <div class="verdict">
+      <span class="verdict-label" id="verdict-label"></span>
+      <span class="confidence" id="confidence"></span>
+    </div>
+    <div class="recommendation">
+      <div class="tag">Recommended Action</div>
+      <div id="recommendation"></div>
+    </div>
+  </div>
+
+  <footer>Model: Random Forest classifier trained on simulated Razorpay style transaction data · AI Revenue Recovery</footer>
+</div>
+
+<script>
+async function checkTransaction() {
+  const payload = {
+    amount: document.getElementById('amount').value,
+    response_time_ms: document.getElementById('response_time_ms').value,
+    bank: document.getElementById('bank').value,
+    payment_method: document.getElementById('payment_method').value,
+    decline_code: document.getElementById('decline_code').value,
+  };
+
+  const res = await fetch('/predict', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+
+  const resultPanel = document.getElementById('result');
+  const label = document.getElementById('verdict-label');
+  const confidence = document.getElementById('confidence');
+  const rec = document.getElementById('recommendation');
+
+  resultPanel.style.display = 'block';
+
+  if (data.is_phantom_failure) {
+    label.textContent = 'PHANTOM FAILURE';
+    label.className = 'verdict-label phantom';
+  } else {
+    label.textContent = 'TRUE FAILURE';
+    label.className = 'verdict-label real';
+  }
+  confidence.textContent = `${data.phantom_confidence}% phantom confidence`;
+  rec.textContent = data.recommendation;
+}
+</script>
+</body>
+</html>
